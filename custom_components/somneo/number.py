@@ -2,12 +2,13 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.input_datetime import InputDatetime, CONF_HAS_DATE, CONF_HAS_TIME
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HOURS, MINUTES, HOURS_ICON, MINUTES_ICON
+from .const import DOMAIN, ALARMS_ICON
 from .entity import SomneoEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,50 +30,33 @@ async def async_setup_entry(
     alarms = []
     # Add hour & min number_entity for each alarms
     for alarm in list(coordinator.data['alarms']):
-        alarms.append(SomneoTime(coordinator, unique_id, name, device_info, alarm, HOURS))
-        alarms.append(SomneoTime(coordinator, unique_id, name, device_info, alarm, MINUTES))
+        alarms.append(SomneoTime(coordinator, unique_id, name, device_info, alarm))
     
     snooze = [SomneoSnooze(coordinator, unique_id, name, device_info, 'snooze')]
 
     async_add_entities(alarms, True)
     async_add_entities(snooze, True)
 
-class SomneoTime(SomneoEntity, NumberEntity):
+class SomneoTime(SomneoEntity, InputDatetime):
     _attr_should_poll = True
-    _attr_assumed_state = False
-    _attr_available = True
-    _attr_native_step = 1
+    _attr_icon = ALARMS_ICON
 
-    def __init__(self, coordinator, unique_id, name, dev_info, alarm, type):
+    def __init__(self, coordinator, unique_id, name, dev_info, alarm):
         """Initialize number entities."""
-        super().__init__(coordinator, unique_id, name, dev_info, alarm + '_' + type)
+        SomneoEntity.__init__(self, coordinator, unique_id, name, dev_info, alarm)
+        InputDatetime.__init__(self, { CONF_HAS_DATE: False, CONF_HAS_TIME: True })
 
-        self._attr_name = alarm.capitalize() + " " + type
-        if type == HOURS:
-            self._attr_native_min_value = 0
-            self._attr_native_max_value = 23
-            self._attr_icon = HOURS_ICON
-        elif type == MINUTES:
-            self._attr_native_min_value = 0
-            self._attr_native_max_value = 59
-            self._attr_icon = MINUTES_ICON
+        self._attr_name = alarm.capitalize()
 
         self._alarm = alarm
-        self._type = type
 
     @property
-    def native_value(self) -> int:
-        if self._type == MINUTES:
-            return self.coordinator.data['alarms_minute'][self._alarm]
-        elif self._type == HOURS:
-            return self.coordinator.data['alarms_hour'][self._alarm]
+    def state(self):
+        return f"self.coordinator.data['alarms_hour'][self._alarm]:{self.coordinator.data['alarms_minute'][self._alarm]:02d}"
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Called when user adjust Hours / Minutes in the UI"""
-        if self._type == MINUTES:
-            await self.coordinator.async_set_alarm(self._alarm, minutes = int(value))
-        elif self._type == HOURS:
-            await self.coordinator.async_set_alarm(self._alarm, hours = int(value))
+    @callback
+    def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
+        self.coordinator.async_set_alarm(self._alarm, hours = time.hour, minutes = time.minute)
 
 
 class SomneoSnooze(SomneoEntity, NumberEntity):

@@ -10,8 +10,6 @@ DEFAULT_NAME: Final = "Somneo"
 CONF_SENS: Final = 'sensors'
 
 ALARMS: Final = 'alarms'
-HOURS: Final = 'hours'
-MINUTES: Final = 'minutes'
 WORKDAYS: Final = 'workdays'
 WEEKEND: Final = 'weekend'
 TOMORROW: Final = 'tomorrow'
@@ -19,8 +17,6 @@ EVERYDAY: Final = 'daily'
 UNKNOWN: Final = 'unknown'
 
 ALARMS_ICON: Final = 'hass:alarm'
-HOURS_ICON: Final = 'hass:counter'
-MINUTES_ICON: Final = 'hass:counter'
 WORKDAYS_ICON: Final = 'hass:calendar-range'
 WEEKEND_ICON: Final = 'hass:calendar-range'
 
