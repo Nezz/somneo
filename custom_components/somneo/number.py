@@ -40,6 +40,7 @@ async def async_setup_entry(
 class SomneoTime(SomneoEntity, InputDatetime):
     _attr_should_poll = True
     _attr_icon = ALARMS_ICON
+    editable = True
 
     def __init__(self, coordinator, unique_id, name, dev_info, alarm):
         """Initialize number entities."""
@@ -49,6 +50,10 @@ class SomneoTime(SomneoEntity, InputDatetime):
         self._attr_name = alarm.capitalize()
 
         self._alarm = alarm
+
+    @property
+    def unique_id(self) -> str | None:
+        return self._attr_unique_id
 
     @property
     def state(self):
